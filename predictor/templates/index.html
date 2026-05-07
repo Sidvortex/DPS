@@ -193,60 +193,108 @@ body::before{
 
 /* ── LEVER SWITCH ──────────────────────────────────────────── */
 .lever-wrap{
-  display:flex;align-items:center;gap:10px;
-  margin-right:4px;
+  display:flex;align-items:center;gap:8px;
+  margin-right:6px;
 }
 .lever-label{
-  font-size:10px;font-family:'IBM Plex Mono',monospace;
+  font-size:9px;font-family:'IBM Plex Mono',monospace;
   color:var(--textd);text-transform:uppercase;letter-spacing:.8px;
-  line-height:1.2;text-align:right;max-width:56px;
+  line-height:1.3;text-align:right;max-width:48px;
 }
+/* Outer housing/base */
 .lever-switch{
-  position:relative;width:38px;height:64px;
+  position:relative;
+  width:44px;height:80px;
   cursor:pointer;flex-shrink:0;
-}
-.lever-track{
-  position:absolute;left:50%;transform:translateX(-50%);
-  width:14px;height:64px;
-  background:linear-gradient(180deg,var(--bsh) 0%,var(--bf) 50%,var(--bsh) 100%);
+  /* Mounting plate */
+  background:linear-gradient(180deg,var(--chrome) 0%,var(--bf) 40%,var(--chrome) 100%);
   border:2px solid var(--bd);
-  box-shadow:inset 1px 1px 0 rgba(255,255,255,.12),inset -1px -1px 0 rgba(0,0,0,.3);
+  box-shadow:inset 1px 1px 0 rgba(255,255,255,.25),inset -1px -1px 0 rgba(0,0,0,.3),
+             2px 2px 0 var(--bd),3px 3px 0 rgba(0,0,0,.2);
+  border-radius:4px;
+  display:flex;flex-direction:column;align-items:center;justify-content:space-between;
+  padding:7px 0 5px;
+  user-select:none;
+}
+/* ON / OFF text labels on housing */
+.lever-switch::before{
+  content:'ON';
+  position:absolute;bottom:8px;left:50%;transform:translateX(-50%);
+  font-family:'IBM Plex Mono',monospace;font-size:8px;font-weight:700;
+  color:var(--textd);letter-spacing:.5px;
+}
+.lever-switch::after{
+  content:'OFF';
+  position:absolute;top:8px;left:50%;transform:translateX(-50%);
+  font-family:'IBM Plex Mono',monospace;font-size:8px;font-weight:700;
+  color:var(--textd);letter-spacing:.5px;
+}
+.lever-switch.on::before{ color:var(--grn); font-weight:800; }
+/* Guide slot */
+.lever-slot{
+  position:absolute;left:50%;transform:translateX(-50%);
+  width:6px;height:54px;
+  background:var(--bsh);
+  border:1px solid var(--bd);
   border-radius:3px;
+  box-shadow:inset 1px 1px 2px rgba(0,0,0,.4);
+  top:50%;transform:translate(-50%,-50%);
 }
-.lever-notch-top,.lever-notch-bot{
-  position:absolute;left:50%;transform:translateX(-50%);
-  width:18px;height:4px;
-  background:var(--bd);border-radius:1px;
-  box-shadow:1px 1px 0 rgba(0,0,0,.3);
-}
-.lever-notch-top{top:4px}.lever-notch-bot{bottom:4px}
-.lever-handle{
-  position:absolute;left:50%;transform:translateX(-50%);
-  width:36px;height:22px;
-  background:linear-gradient(180deg,var(--bhi) 0%,var(--bf) 55%,var(--chrome) 100%);
+/* The lever arm itself */
+.lever-arm{
+  position:absolute;
+  width:26px;height:30px;
+  left:50%;
+  transform:translateX(-50%);
+  transition:top .2s cubic-bezier(.4,0,.2,1), background .2s;
+  top:10px; /* OFF position = top */
+  z-index:2;
+  /* Rounded toggle cap */
+  background:linear-gradient(135deg,var(--bhi) 0%,var(--bf) 50%,var(--chrome) 100%);
   border:2px solid var(--bd);
-  box-shadow:inset 1px 1px 0 rgba(255,255,255,.6),inset -1px -1px 0 var(--bsh),2px 2px 0 rgba(0,0,0,.25);
-  border-radius:3px;
-  transition:top .18s cubic-bezier(.4,0,.2,1);
-  top:4px; /* OFF = top */
+  border-radius:4px 4px 6px 6px;
+  box-shadow:inset 1px 1px 0 rgba(255,255,255,.6),inset -1px -1px 0 rgba(0,0,0,.3),
+             0 3px 0 var(--bd),0 5px 0 rgba(0,0,0,.25);
   display:flex;align-items:center;justify-content:center;
-  font-size:8px;color:var(--textd);font-family:'IBM Plex Mono',monospace;font-weight:600;
 }
-.lever-switch.on .lever-handle{
-  top:38px; /* ON = bottom */
-  background:linear-gradient(180deg,var(--bhi) 0%,var(--sel) 55%,#0d1a50 100%);
-  color:var(--selt);
+/* Grip lines on lever arm */
+.lever-arm::before{
+  content:'';
+  display:block;width:14px;height:10px;
+  background:repeating-linear-gradient(0deg,
+    transparent 0,transparent 2px,
+    rgba(0,0,0,.18) 2px,rgba(0,0,0,.18) 3px);
+  border-radius:1px;
 }
-.lever-switch.on .lever-track{
-  background:linear-gradient(180deg,var(--sel) 0%,var(--bf) 50%,var(--sel) 100%);
-  border-color:var(--sel);
+/* ON state — lever moves down */
+.lever-switch.on .lever-arm{
+  top:42px;
+  background:linear-gradient(135deg,var(--bhi) 0%,var(--sel) 55%,#0d1a50 100%);
+  box-shadow:inset 1px 1px 0 rgba(255,255,255,.4),inset -1px -1px 0 rgba(0,0,0,.4),
+             0 2px 0 var(--bd),0 3px 0 rgba(0,0,0,.3);
 }
-.lever-indicator{
-  width:8px;height:8px;border-radius:50%;
-  border:1px solid var(--bd);margin:0 auto;margin-top:3px;
-  background:var(--bd);transition:background .18s;
+.lever-switch.on .lever-arm::before{
+  background:repeating-linear-gradient(0deg,
+    transparent 0,transparent 2px,
+    rgba(255,255,255,.15) 2px,rgba(255,255,255,.15) 3px);
 }
-.lever-switch.on .lever-indicator{ background:var(--grn); box-shadow:0 0 4px var(--grn); }
+/* Status dot */
+.lever-dot{
+  position:absolute;bottom:20px;left:50%;transform:translateX(-50%);
+  width:7px;height:7px;border-radius:50%;
+  background:var(--bdm);
+  border:1px solid var(--bd);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.2);
+  transition:background .2s,box-shadow .2s;
+  z-index:3;
+}
+.lever-switch.on .lever-dot{
+  background:var(--grn);
+  box-shadow:0 0 5px var(--grn),0 0 10px rgba(42,106,42,.4);
+}
+[data-theme="night"] .lever-switch.on .lever-dot{
+  box-shadow:0 0 6px var(--grn),0 0 12px rgba(74,154,74,.5);
+}
 
 /* ── MENUBAR ────────────────────────────────────────────────── */
 .menubar{
@@ -842,15 +890,12 @@ canvas{max-height:155px}
             <button type="button" class="mac-btn" id="clr-btn" onclick="clearForm()">Clear</button>
             {% if result %}<button type="button" class="mac-btn" onclick="exportPDF()">&#128196; PDF</button>{% endif %}
             <!-- LEVER SWITCH -->
-            <div class="lever-wrap" title="Flip to run prediction">
+            <div class="lever-wrap" title="Flip lever to run prediction">
               <div class="lever-label">RUN<br>PREDICT</div>
               <div class="lever-switch" id="lever" onclick="leverToggle()">
-                <div class="lever-track">
-                  <div class="lever-notch-top"></div>
-                  <div class="lever-notch-bot"></div>
-                </div>
-                <div class="lever-handle" id="lever-handle">OFF</div>
-                <div class="lever-indicator" id="lever-ind"></div>
+                <div class="lever-slot"></div>
+                <div class="lever-arm" id="lever-arm"></div>
+                <div class="lever-dot" id="lever-dot"></div>
               </div>
             </div>
             <button type="submit" class="mac-btn default" id="sub-btn">&#10010; Run Prediction</button>
@@ -1166,14 +1211,13 @@ function morphStep() {
 
 function enterDPS() {
   sfxSubmit();
-  // ripple effect
   const btn = enterBtn.querySelector('.lg-btn');
   const r = document.createElement('span');
   r.className = 'lg-btn-ripple';
   r.style.cssText = `width:120px;height:120px;left:${btn.offsetWidth/2-60}px;top:${btn.offsetHeight/2-60}px`;
   btn.appendChild(r);
   setTimeout(() => r.remove(), 500);
-  // fade out
+  sessionStorage.setItem('dps-booted', '1');
   setTimeout(() => {
     bootEl.classList.add('fade-out');
     desk.style.opacity = '1';
@@ -1186,6 +1230,14 @@ function enterDPS() {
 }
 
 window.addEventListener('load', () => {
+  // Skip boot entirely when returning from a prediction (POST redirect)
+  if (sessionStorage.getItem('dps-booted')) {
+    bootEl.classList.add('gone');
+    desk.style.opacity = '1';
+    buildCharts();
+    if (disease === 'heart') startECG();
+    return;
+  }
   sfxBoot(() => { morphStep(); });
 });
 
@@ -1196,34 +1248,32 @@ let leverOn = false;
 let leverResetTimer = null;
 
 function leverToggle() {
-  leverOn = !leverOn;
+  if (leverOn) return; // prevent double-fire mid-submit
+  leverOn = true;
   const el = document.getElementById('lever');
-  const handle = document.getElementById('lever-handle');
-  el.classList.toggle('on', leverOn);
-  handle.textContent = leverOn ? 'ON' : 'OFF';
+  el.classList.add('on');
+  sfxSubmit();
 
-  if (leverOn) {
-    sfxSubmit();
-    // flash the Run Prediction button
-    const sb = document.getElementById('sub-btn');
-    if (sb) { sb.style.transform = 'translate(2px,2px)'; setTimeout(() => sb.style.transform = '', 180); }
-    // submit form
-    setTimeout(() => {
-      const form = document.getElementById('pf');
-      if (form) form.submit();
-    }, 250);
-    // reset lever after 1.5s
-    if (leverResetTimer) clearTimeout(leverResetTimer);
-    leverResetTimer = setTimeout(() => {
-      leverOn = false;
-      const el2 = document.getElementById('lever');
-      const h2 = document.getElementById('lever-handle');
-      if (el2) el2.classList.remove('on');
-      if (h2) h2.textContent = 'OFF';
-    }, 1500);
-  } else {
-    sfxClear();
+  // visual flash on Run Prediction button
+  const sb = document.getElementById('sub-btn');
+  if (sb) {
+    sb.style.transform = 'translate(2px,2px)';
+    sb.style.boxShadow = 'inset 2px 2px 4px rgba(0,0,0,.2),1px 1px 0 var(--bd)';
+    setTimeout(() => { sb.style.transform = ''; sb.style.boxShadow = ''; }, 200);
   }
+
+  // submit after short visual delay
+  setTimeout(() => {
+    const form = document.getElementById('pf');
+    if (form) form.submit();
+  }, 280);
+
+  // reset after 2s in case form submission stays on same page (validation error)
+  leverResetTimer = setTimeout(() => {
+    leverOn = false;
+    const el2 = document.getElementById('lever');
+    if (el2) el2.classList.remove('on');
+  }, 2000);
 }
 
 /* ════════════════════════════════════════════════
