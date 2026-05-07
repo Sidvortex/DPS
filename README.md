@@ -233,18 +233,6 @@ python manage.py runserver
 
 ---
 
-## Adding Member Photos
-
-1. Create folder: `predictor/static/images/`
-2. Add files named: `siddharth.jpg`, `arpit.jpg`, `kanak.jpg`
-3. In `templates/index.html`, find each `mphoto-ph` div and replace with:
-```html
-<img style="width:76px;height:76px;object-fit:cover;border:3px solid var(--bd)"
-     src="/static/images/siddharth.jpg"/>
-```
-
----
-
 ## Team
 
 **B.Tech CSE-DS — MUIT Noida — Batch 2023–2027**
