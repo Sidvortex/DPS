@@ -169,7 +169,7 @@ Both Gradient Boosting and Random Forest were trained for each disease. The mode
 ## Project Structure
 
 ```
-theme_apple/
+DPS/
 ├── diabetes_project/
 │   ├── settings.py
 │   ├── urls.py
@@ -224,8 +224,8 @@ pip install django scikit-learn imbalanced-learn pandas numpy
 
 ```bash
 # Run
-unzip DPS_Retro_Terminal_v3.zip
-cd theme_apple
+unzip DPS-3.0.zip
+cd DPS-3.0
 python manage.py migrate
 python manage.py runserver
 # Open: http://127.0.0.1:8000/
