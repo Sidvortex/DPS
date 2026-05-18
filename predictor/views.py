@@ -11,11 +11,15 @@ def index(request):
 
     diab_form  = DiabetesForm()
     heart_form = HeartDiseaseForm()
-    result     = None
+    result = None
 
     if request.method == 'POST':
         if disease == 'diabetes':
-            diab_form = DiabetesForm(request.POST)
+            # For male patients, pregnancies field is hidden — ensure it's 0
+            post_data = request.POST.copy()
+            if not post_data.get('pregnancies'):
+                post_data['pregnancies'] = '0'
+            diab_form = DiabetesForm(post_data)
             if diab_form.is_valid():
                 d = diab_form.cleaned_data
                 result = ml_service.predict_diabetes(d)
@@ -52,15 +56,14 @@ def index(request):
         'result':        result,
         'diab_stats':    ml_service.get_diabetes_stats(),
         'heart_stats':   ml_service.get_heart_stats(),
-        'diab_high':     d_high, 'diab_low': d_low,
+        'diab_high':     d_high, 'diab_low':  d_low,
         'heart_high':    h_high, 'heart_low': h_low,
         'history':       PredictionRecord.objects.filter(disease=disease)[:8],
         'chart_json':    json.dumps(chart_data),
         'radar_json':    json.dumps(result.get('radar') if result else None),
         'fi_json':       json.dumps(result.get('feature_importance') if result else None),
-        'indicators':    result.get('indicators') if result else {},
-        'diab_model':    ml_service.DIAB_MODEL_NAME,
-        'diab_acc':      ml_service.DIAB_ACCURACY,
-        'heart_model':   ml_service.HEART_MODEL_NAME,
-        'heart_acc':     ml_service.HEART_ACCURACY,
+        'indicators':      json.dumps(result.get('indicators') if result else {}),   # JSON string for JS
+        'indicators_dict': result.get('indicators') if result else {},                # dict for Django template
+        'diab_model':    ml_service.DIAB_MODEL_NAME, 'diab_acc': ml_service.DIAB_ACCURACY,
+        'heart_model':   ml_service.HEART_MODEL_NAME,'heart_acc': ml_service.HEART_ACCURACY,
     })
