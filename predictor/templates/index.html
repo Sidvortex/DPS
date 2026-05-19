@@ -824,8 +824,7 @@ canvas{max-height:155px}
       <div class="gender-sel" id="gender-sel">
         <button type="button" class="gender-btn active" id="btn-female" onclick="setGender('female')">&#9792; Female</button>
         <button type="button" class="gender-btn" id="btn-male" onclick="setGender('male')">&#9794; Male</button>
-      </div>
-      <div class="male-note" id="male-note">&#9794; Male mode: Pregnancies field hidden (set to 0 automatically)</div>
+      </div>      
       {% endif %}
     </form>
   </div>
@@ -1640,7 +1639,7 @@ function exportPDF() {
     meta.forEach(({label,val}, i) => {
       const cx = M + (i % cols) * cellW;
       const cy = y + Math.floor(i / cols) * cellH;
-      doc.setFillColor(i % cols === 0 ? ...LGREY : ...WHITE);
+      doc.setFillColor(...(i % cols === 0 ? LGREY : WHITE));
       doc.rect(cx, cy, cellW, cellH, 'F');
       doc.setDrawColor(...MGREY); doc.setLineWidth(0.2);
       doc.rect(cx, cy, cellW, cellH, 'S');
