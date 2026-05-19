@@ -239,9 +239,9 @@ python manage.py runserver
 
 | Member | Roles |
 |--------|-------|
-| Ravada Siddharth | Backend, ML Integration, UI, Frontend Development, ML Model Training |
-| Arpit Kumar | Machine Learning, Data Analysis, Model Evaluation |
-| Kanak Sharma | Backend Development, Documentation, Data Preprocessing |
+| Ravada Siddharth | ML Integration, UI, Frontend Development, ML Model Training, Documentation |
+| Arpit Kumar | ML Model Training, Model Evaluation, Documentation |
+| Kanak Sharma | Frontend Development, Documentation, Data Preprocessing, Documentation |
 
 ---
 
