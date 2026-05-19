@@ -1499,198 +1499,432 @@ function stopECG() {
 function exportPDF() {
   sfxClick();
   if (!hasPrediction) { showToast('⚠ Run a prediction first.'); return; }
+
   try {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-    const W = 210, H = 297, M = 16;
 
-    // ── Colour palette (HV Smart Report inspired) ──────────
-    const NAVY   = [15, 40, 90];
-    const TEAL   = [0, 140, 150];
-    const LTEAL  = [200, 235, 238];
-    const RED    = [200, 40, 50];
-    const GREEN  = [40, 140, 80];
-    const AMBER  = [220, 150, 0];
+    /* ════════════════════════════════════════════════
+       MINIMALIST PALETTE — Black, Gray, One Accent
+    ════════════════════════════════════════════════ */
+    const BLACK  = [20, 20, 20];
+    const GRAY   = [100, 100, 105];
+    const LIGHT  = [240, 240, 242];
+    const MID    = [200, 200, 204];
     const WHITE  = [255, 255, 255];
-    const LGREY  = [245, 247, 250];
-    const MGREY  = [200, 205, 215];
-    const DGREY  = [60, 60, 70];
-    const isNeg  = predLabel.includes('Not') || predLabel.includes('No');
-    const RESCOL = isNeg ? GREEN : RED;
-    const RESLGT = isNeg ? [200, 240, 215] : [250, 215, 215];
-    const dName  = disease === 'diabetes' ? 'Diabetes Risk Analysis' : 'Heart Disease Risk Analysis';
 
-    // ── HEADER STRIP ─────────────────────────────────────────
-    doc.setFillColor(...NAVY); doc.rect(0, 0, W, 20, 'F');
-    doc.setFillColor(...TEAL); doc.rect(0, 20, W, 4, 'F');
-    doc.setTextColor(...WHITE); doc.setFont('helvetica','bold'); doc.setFontSize(15);
-    doc.text('DPS — Diagnostic Prediction Suite', M, 13);
-    doc.setFont('helvetica','normal'); doc.setFontSize(8);
-    doc.text(dName + '  ·  ' + new Date().toLocaleDateString(), W - M, 13, { align:'right' });
+    const isHealthy = /not|no|healthy|low/i.test(predLabel);
+    const ACCENT = isHealthy ? [40, 140, 80] : [190, 50, 50];
+    const dShort = disease === 'diabetes' ? 'Diabetes' : 'Heart Disease';
+    const reportId = 'DPS-' + Math.floor(Math.random()*900000+100000);
 
-    // ── PATIENT DISCLAIMER RIBBON ────────────────────────────
-    doc.setFillColor(255, 245, 200); doc.rect(0, 24, W, 8, 'F');
-    doc.setFont('helvetica','bold'); doc.setFontSize(7); doc.setTextColor(160, 90, 0);
-    doc.text('⚠  STUDENT PROJECT · B.Tech CSE-DS · MUIT Noida 2023–2027 · NOT a certified medical report · For educational purposes only', M, 29.5, { maxWidth: W - M*2 });
+    const W = 210, H = 297, M = 18;
+    let y = M;
+    let page = 1;
 
-    let y = 38;
-
-    // ── YOUR HEALTH SUMMARY (left panel) ─────────────────────
-    const panelW = (W - M*2 - 6) / 2;
-    const lx = M, rx = M + panelW + 6;
-
-    // Left panel bg
-    doc.setFillColor(...LGREY); doc.rect(lx, y, panelW, 58, 'F');
-    doc.setDrawColor(...MGREY); doc.setLineWidth(0.3); doc.rect(lx, y, panelW, 58, 'S');
-
-    // Section label
-    doc.setFillColor(...NAVY); doc.rect(lx, y, panelW, 8, 'F');
-    doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(...WHITE);
-    doc.text('Your Health Summary', lx + 3, y + 5.5);
-    y += 10;
-
-    // Big result
-    doc.setFillColor(...RESLGT); doc.roundedRect(lx + 3, y, panelW - 6, 22, 2, 2, 'F');
-    doc.setFont('helvetica','bold'); doc.setFontSize(18); doc.setTextColor(...RESCOL);
-    doc.text(predLabel.toUpperCase(), lx + panelW/2, y + 10, { align:'center' });
-    doc.setFontSize(10); doc.text('Risk: ' + predRisk, lx + panelW/2, y + 17, { align:'center' });
-    y += 25;
-
-    // Confidence arc (text version)
-    doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(...NAVY);
-    doc.text('Model Confidence', lx + 3, y + 4);
-    // bar
-    doc.setFillColor(...MGREY); doc.roundedRect(lx + 3, y + 6, panelW - 6, 6, 1, 1, 'F');
-    doc.setFillColor(...RESCOL); doc.roundedRect(lx + 3, y + 6, (panelW - 6) * predConf / 100, 6, 1, 1, 'F');
-    doc.setFontSize(11); doc.setTextColor(...RESCOL);
-    doc.text(predConf + '%', lx + panelW/2, y + 20, { align:'center' });
-    y += 22;
-
-    // Note box
-    doc.setFillColor(255, 250, 230); doc.rect(lx + 3, y - 1, panelW - 6, 14, 'F');
-    doc.setFont('helvetica','italic'); doc.setFontSize(7); doc.setTextColor(140, 80, 0);
-    const note = isNeg
-      ? '✓ Maintain a healthy lifestyle. Schedule routine check-ups with your doctor.'
-      : '⚠ Please consult a qualified healthcare professional for confirmed diagnosis and treatment.';
-    doc.text(note, lx + 5, y + 4, { maxWidth: panelW - 10 });
-
-    // ── RIGHT PANEL: YOUR DISEASE / RISK FACTORS ─────────────
-    let ry = 38;
-    doc.setFillColor(...LGREY); doc.rect(rx, ry, panelW, 58, 'F');
-    doc.setDrawColor(...MGREY); doc.rect(rx, ry, panelW, 58, 'S');
-    doc.setFillColor(...TEAL); doc.rect(rx, ry, panelW, 8, 'F');
-    doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(...WHITE);
-    doc.text('Your Disease / Risk Factors', rx + 3, ry + 5.5);
-    ry += 10;
-
-    // Risk indicator circles
-    const indLabels = Object.keys(indicators);
-    const indCols   = Object.values(indicators);
-    const cmap = {ok:[40,140,80], warn:[220,150,0], danger:[200,40,50], neutral:[150,150,150]};
-    const circR = 4.5, circSpacing = (panelW) / Math.max(indLabels.length, 1);
-    indLabels.forEach((lbl, i) => {
-      const cx = rx + circSpacing * i + circSpacing/2;
-      const cy = ry + 10;
-      const col = cmap[indCols[i]] || [150,150,150];
-      doc.setFillColor(...col); doc.circle(cx, cy, circR, 'F');
-      doc.setTextColor(...WHITE); doc.setFont('helvetica','bold'); doc.setFontSize(5);
-      doc.text(indCols[i] === 'ok' ? '✓' : indCols[i] === 'danger' ? '!' : '~', cx, cy + 1.5, { align:'center' });
-      doc.setTextColor(...DGREY); doc.setFont('helvetica','normal'); doc.setFontSize(6);
-      doc.text(lbl.replace(/_/g,' '), cx, cy + 8, { align:'center', maxWidth: circSpacing - 1 });
-    });
-    ry += 24;
-
-    // Feature importance mini section
-    doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(...NAVY);
-    doc.text('Key Risk Factors (Model Weights):', rx + 3, ry + 3);
-    ry += 6;
-    if (fiData) {
-      const sorted = Object.entries(fiData).sort((a,b)=>b[1]-a[1]).slice(0,5);
-      sorted.forEach(([k,v], i) => {
-        const fy = ry + i * 6;
-        doc.setFont('helvetica','normal'); doc.setFontSize(7); doc.setTextColor(...DGREY);
-        doc.text(k, rx + 3, fy + 3);
-        doc.setFillColor(...MGREY); doc.rect(rx + 42, fy, 38, 4, 'F');
-        doc.setFillColor(...TEAL); doc.rect(rx + 42, fy, Math.min(38, v * 1.1), 4, 'F');
-        doc.setFont('helvetica','bold'); doc.setFontSize(6.5); doc.setTextColor(...NAVY);
-        doc.text(v.toFixed(1)+'%', rx + 82, fy + 3);
-      });
+    /* ── HELPERS ─────────────────────────────────── */
+    function newPage() {
+      doc.addPage();
+      page++;
+      y = M;
+      thinFooter();
     }
-    ry += 38;
 
-    y = Math.max(y + 12, ry);
+    function thinFooter() {
+      doc.setDrawColor(...MID);
+      doc.setLineWidth(0.3);
+      doc.line(M, H - 10, W - M, H - 10);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(7.5);
+      doc.setTextColor(...GRAY);
+      doc.text(`Diagnostic Prediction Suite  ·  ${dShort}  ·  ${reportId}`, M, H - 5.5);
+      doc.text(`Page ${page}`, W - M, H - 5.5, { align: 'right' });
+    }
 
-    // ── HEALTH PICTURE SECTION ───────────────────────────────
-    doc.setFillColor(...NAVY); doc.rect(M, y, W - M*2, 8, 'F');
-    doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(...WHITE);
-    doc.text('Your Health Picture', M + 3, y + 5.5);
-    y += 11;
+    function needSpace(mm) {
+      if (y + mm > H - 14) newPage();
+    }
 
-    // Model metadata in a clean grid
-    const meta = [
-      { label:'Disease Module', val: dName },
-      { label:'Algorithm', val: modelName },
-      { label:'Test Accuracy', val: modelAcc + '%' },
-      { label:'Dataset', val: disease === 'diabetes' ? 'Pima Indians (UCI/NIDDK) — SMOTE to 4,000' : 'Synthetic Framingham+Cleveland — SMOTE to 4,000' },
-      { label:'Augmentation', val: 'SMOTE (Synthetic Minority Oversampling Technique)' },
-      { label:'Prediction Date', val: new Date().toLocaleString() },
+    function wrap(txt, maxW, size) {
+      doc.setFontSize(size);
+      return doc.splitTextToSize(txt, maxW);
+    }
+
+    function thinLine(yy) {
+      doc.setDrawColor(...MID);
+      doc.setLineWidth(0.25);
+      doc.line(M, yy, W - M, yy);
+    }
+
+    function getChart(id) {
+      const c = document.getElementById(id);
+      if (!c) return null;
+      try { return c.toDataURL('image/png'); } catch(e) { return null; }
+    }
+
+    const radarImg = getChart('radarChart');
+    const fiImg    = getChart('fiChart');
+    const distImg  = getChart('distChart');
+
+    /* ════════════════════════════════════════════════
+       PAGE 1 — HEADER & RESULT
+    ════════════════════════════════════════════════ */
+
+    // ── Top Header ──
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(11);
+    doc.setTextColor(...BLACK);
+    doc.text('DIAGNOSTIC PREDICTION SUITE', M, y);
+    y += 5;
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8.5);
+    doc.setTextColor(...GRAY);
+    doc.text(`ML Health Screening Report  ·  ${new Date().toLocaleDateString()}  ·  ${reportId}`, M, y);
+    y += 3;
+    thinLine(y);
+    y += 8;
+
+    // ── Result ──
+    needSpace(35);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(24);
+    doc.setTextColor(...ACCENT);
+    doc.text(predLabel.toUpperCase(), M, y);
+    y += 7;
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+    doc.setTextColor(...BLACK);
+    doc.text(`Risk Level: ${predRisk}`, M, y);
+    y += 5;
+
+    // Confidence simple bar
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    doc.setTextColor(...GRAY);
+    doc.text(`Model Confidence: ${predConf}%`, M, y);
+    y += 3;
+    doc.setFillColor(...LIGHT);
+    doc.rect(M, y, 60, 3, 'F');
+    doc.setFillColor(...ACCENT);
+    doc.rect(M, y, 60 * (predConf/100), 3, 'F');
+    y += 7;
+
+    // Thin separator
+    thinLine(y);
+    y += 6;
+
+    // ── Two Column Layout: Left = Summary, Right = Indicators ──
+    const colW = (W - M*2 - 8) / 2;
+    const startY = y;
+
+    // LEFT: Summary
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9);
+    doc.setTextColor(...BLACK);
+    doc.text('SUMMARY', M, y);
+    y += 5;
+
+    const summaryText = isHealthy
+      ? 'All evaluated biomarkers fall within expected ranges. Continue routine monitoring and maintain current lifestyle practices.'
+      : 'One or more evaluated biomarkers exceed expected thresholds. Clinical correlation and confirmatory testing by a qualified physician are strongly recommended.';
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    doc.setTextColor(...GRAY);
+    const sumLines = wrap(summaryText, colW, 9);
+    doc.text(sumLines, M, y);
+    y += sumLines.length * 4.2 + 4;
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9);
+    doc.setTextColor(...BLACK);
+    doc.text('MODEL DETAILS', M, y);
+    y += 5;
+
+    const details = [
+      ['Algorithm', modelName],
+      ['Test Accuracy', modelAcc + '%'],
+      ['Disease Module', dShort],
+      ['Dataset', disease==='diabetes'?'Pima Indians (SMOTE 4K)':'Framingham+Cleveland (SMOTE 4K)'],
     ];
-    const cols = 2, cellW = (W - M*2) / cols, cellH = 12;
-    meta.forEach(({label,val}, i) => {
-      const cx = M + (i % cols) * cellW;
-      const cy = y + Math.floor(i / cols) * cellH;
-      doc.setFillColor(...(i % cols === 0 ? LGREY : WHITE));
-      doc.rect(cx, cy, cellW, cellH, 'F');
-      doc.setDrawColor(...MGREY); doc.setLineWidth(0.2);
-      doc.rect(cx, cy, cellW, cellH, 'S');
-      doc.setFont('helvetica','bold'); doc.setFontSize(7); doc.setTextColor(...TEAL);
-      doc.text(label, cx + 2, cy + 4.5);
-      doc.setFont('helvetica','normal'); doc.setTextColor(...DGREY);
-      doc.text(val, cx + 2, cy + 9.5, { maxWidth: cellW - 4 });
+    details.forEach(([k, v]) => {
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(8.5);
+      doc.setTextColor(...GRAY);
+      doc.text(k + ':', M, y);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(...BLACK);
+      const vLines = wrap(v, colW - 28, 8.5);
+      doc.text(vLines, M + 28, y);
+      y += Math.max(vLines.length * 3.8, 4.5);
     });
-    y += Math.ceil(meta.length / cols) * cellH + 6;
 
-    // ── TEAM + DISCLAIMER ────────────────────────────────────
-    doc.setFillColor(...TEAL); doc.rect(M, y, W - M*2, 8, 'F');
-    doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(...WHITE);
-    doc.text('Project Information', M + 3, y + 5.5);
-    y += 11;
+    // RIGHT: Indicators
+    let ry = startY;
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9);
+    doc.setTextColor(...BLACK);
+    doc.text('RISK INDICATORS', M + colW + 8, ry);
+    ry += 5;
 
-    const tw = (W - M*2) * 0.55, dw = (W - M*2) * 0.45 - 4;
-    doc.setFillColor(...LGREY); doc.rect(M, y, tw, 20, 'F');
-    doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(...NAVY);
-    doc.text('Team Members', M + 2, y + 5);
-    doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(...DGREY);
-    doc.text('Ravada Siddharth  |  Arpit Kumar  |  Kanak Sharma', M + 2, y + 11);
-    doc.setFont('helvetica','bold'); doc.setFontSize(7.5); doc.setTextColor(...NAVY);
-    doc.text('Institution', M + 2, y + 16);
-    doc.setFont('helvetica','normal'); doc.setFontSize(7); doc.setTextColor(...DGREY);
-    doc.text('MUIT Noida · B.Tech CSE-DS · Batch 2023–2027', M + 2, y + 20);
+    const indKeys = Object.keys(indicators);
+    const indVals = Object.values(indicators);
+    const cmap = {ok: [40,140,80], warn: [200,150,30], danger: [190,50,50], neutral: [140,140,150]};
 
-    // Yellow disclaimer box
-    doc.setFillColor(255, 248, 220);
-    doc.rect(M + tw + 4, y, dw, 20, 'F');
-    doc.setDrawColor(...AMBER); doc.setLineWidth(0.5);
-    doc.rect(M + tw + 4, y, dw, 20, 'S');
-    doc.setFont('helvetica','bold'); doc.setFontSize(7.5); doc.setTextColor(160, 90, 0);
-    doc.text('⚠ NOT A MEDICAL REPORT', M + tw + 6, y + 5);
-    doc.setFont('helvetica','normal'); doc.setFontSize(6.5);
-    doc.text('This is an academic ML screening result. Do not use for clinical decisions. Consult a qualified doctor.', M + tw + 6, y + 10, { maxWidth: dw - 4 });
-    y += 24;
+    indKeys.forEach((k, i) => {
+      const col = cmap[indVals[i]] || cmap.neutral;
+      // Small colored square
+      doc.setFillColor(...col);
+      doc.rect(M + colW + 8, ry - 2.2, 2.5, 2.5, 'F');
+      // Label
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8.5);
+      doc.setTextColor(...BLACK);
+      doc.text(k.replace(/_/g, ' '), M + colW + 12, ry);
+      // Status
+      const status = indVals[i]==='ok' ? 'Normal' : indVals[i]==='danger' ? 'High' : 'Elevated';
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(8);
+      doc.setTextColor(...col);
+      doc.text(status, M + colW + 8 + colW - 2, ry, { align: 'right' });
+      ry += 5.2;
+    });
 
-    // ── FOOTER ──────────────────────────────────────────────
-    doc.setFillColor(...NAVY); doc.rect(0, H - 12, W, 12, 'F');
-    doc.setFont('helvetica','normal'); doc.setFontSize(7); doc.setTextColor(...WHITE);
-    doc.text('DPS — Diagnostic Prediction Suite  ·  MUIT Noida  ·  ' + new Date().toLocaleString(), M, H - 6);
-    doc.text('Page 1 of 1', W - M, H - 6, { align:'right' });
-    doc.setDrawColor(...NAVY); doc.setLineWidth(0.4); doc.rect(4, 4, W - 8, H - 8, 'S');
+    y = Math.max(y, ry) + 6;
+    thinLine(y);
+    y += 8;
 
-    const fname = 'DPS_Report_' + dName.replace(/\s/g,'_') + '_' + new Date().toLocaleDateString().replace(/\//g,'-') + '.pdf';
+    // ── Recommendations ──
+    needSpace(30);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9);
+    doc.setTextColor(...BLACK);
+    doc.text('RECOMMENDATIONS', M, y);
+    y += 5;
+
+    const rec = isHealthy
+      ? '• Maintain balanced nutrition and regular physical activity.'
+        :'• Schedule routine biomarker screening every 6–12 months.'
+        '• Monitor blood pressure, glucose, and lipid profiles periodically.'
+        '• Consult a qualified healthcare professional for confirmatory diagnosis.'
+        '• Consider dietary modifications and structured exercise under medical guidance.'
+        '• Schedule follow-up tests within 2–4 weeks to track biomarker trends.';
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    doc.setTextColor(...GRAY);
+    const recLines = wrap(rec, W - M*2, 9);
+    doc.text(recLines, M, y);
+    y += recLines.length * 4.2 + 6;
+
+    thinLine(y);
+    y += 6;
+
+    // ── Disclaimer ──
+    needSpace(18);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(8);
+    doc.setTextColor(160, 100, 20);
+    doc.text('Disclaimer', M, y);
+    y += 4;
+    doc.setFont('helvetica', 'italic');
+    doc.setFontSize(8);
+    doc.setTextColor(...GRAY);
+    const disc = 'This report is generated by an academic machine-learning system (B.Tech CSE-DS, MUIT Noida 2023–2027). It is intended for educational screening only and does not replace professional medical advice, diagnosis, or treatment. Always consult a licensed physician for clinical decisions.';
+    const discLines = wrap(disc, W - M*2, 8);
+    doc.text(discLines, M, y);
+    y += discLines.length * 3.6 + 4;
+
+    thinFooter();
+
+    /* ════════════════════════════════════════════════
+       PAGE 2 — CHARTS (if available)
+    ════════════════════════════════════════════════ */
+    let hasCharts = radarImg || fiImg || distImg;
+    if (hasCharts) {
+      newPage();
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(11);
+      doc.setTextColor(...BLACK);
+      doc.text('VISUAL ANALYTICS', M, y);
+      y += 4;
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8.5);
+      doc.setTextColor(...GRAY);
+      doc.text('Charts generated from patient data vs. dataset benchmarks', M, y);
+      y += 6;
+      thinLine(y);
+      y += 6;
+
+      const chartW = W - M*2;
+      const chartH = 72;
+
+      if (fiImg) {
+        needSpace(chartH + 10);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(9);
+        doc.setTextColor(...BLACK);
+        doc.text('1. Feature Importance', M, y);
+        y += 4;
+        doc.addImage(fiImg, 'PNG', M, y, chartW, chartH);
+        y += chartH + 6;
+      }
+
+      if (radarImg) {
+        needSpace(chartH + 10);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(9);
+        doc.setTextColor(...BLACK);
+        doc.text('2. Patient vs. Dataset Average', M, y);
+        y += 4;
+        doc.addImage(radarImg, 'PNG', M, y, chartW, chartH);
+        y += chartH + 6;
+      }
+
+      if (distImg) {
+        needSpace(chartH + 10);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(9);
+        doc.setTextColor(...BLACK);
+        doc.text(`3. ${disease==='diabetes'?'Glucose':'Cholesterol'} Distribution`, M, y);
+        y += 4;
+        doc.addImage(distImg, 'PNG', M, y, chartW, chartH);
+        y += chartH + 6;
+      }
+    }
+
+    /* ════════════════════════════════════════════════
+       PAGE 3 — DATA TABLES
+    ════════════════════════════════════════════════ */
+    newPage();
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(11);
+    doc.setTextColor(...BLACK);
+    doc.text('DETAILED DATA', M, y);
+    y += 4;
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8.5);
+    doc.setTextColor(...GRAY);
+    doc.text('Feature importance breakdown and indicator status', M, y);
+    y += 6;
+    thinLine(y);
+    y += 6;
+
+    // Feature Importance Table
+    if (fiData && Object.keys(fiData).length) {
+      needSpace(20);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(9);
+      doc.setTextColor(...BLACK);
+      doc.text('Feature Importance', M, y);
+      y += 5;
+
+      const sorted = Object.entries(fiData).sort((a,b)=>b[1]-a[1]);
+      const tW = W - M*2;
+      const tH = 6.5;
+      const maxBar = 35;
+      const maxVal = sorted[0][1];
+
+      // Header row
+      doc.setFillColor(...LIGHT);
+      doc.rect(M, y, tW, tH, 'F');
+      doc.setDrawColor(...MID);
+      doc.setLineWidth(0.2);
+      doc.rect(M, y, tW, tH, 'S');
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(8);
+      doc.setTextColor(...BLACK);
+      doc.text('Feature', M + 2, y + 4.2);
+      doc.text('Weight', M + tW*0.45, y + 4.2);
+      doc.text('Visual', M + tW*0.62, y + 4.2);
+      y += tH;
+
+      sorted.forEach(([k, v], i) => {
+        doc.setFillColor(...(i%2===0 ? WHITE : LIGHT));
+        doc.rect(M, y, tW, tH, 'F');
+        doc.setDrawColor(...MID);
+        doc.rect(M, y, tW, tH, 'S');
+
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8);
+        doc.setTextColor(...BLACK);
+        doc.text(k.replace(/_/g, ' '), M + 2, y + 4.2);
+        doc.setFont('helvetica', 'bold');
+        doc.text(v.toFixed(2) + '%', M + tW*0.45, y + 4.2);
+
+        // Thin bar
+        const barW = (v / maxVal) * maxBar;
+        doc.setFillColor(...ACCENT);
+        doc.rect(M + tW*0.62, y + 2, barW, 2.5, 'F');
+        y += tH;
+      });
+      y += 6;
+    }
+
+    // Indicator table
+    if (indKeys.length) {
+      needSpace(20);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(9);
+      doc.setTextColor(...BLACK);
+      doc.text('Indicator Status', M, y);
+      y += 5;
+
+      const tW = W - M*2;
+      const tH = 6.5;
+
+      doc.setFillColor(...LIGHT);
+      doc.rect(M, y, tW, tH, 'F');
+      doc.setDrawColor(...MID);
+      doc.rect(M, y, tW, tH, 'S');
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(8);
+      doc.setTextColor(...BLACK);
+      doc.text('Parameter', M + 2, y + 4.2);
+      doc.text('Status', M + tW*0.5, y + 4.2);
+      doc.text('Interpretation', M + tW*0.7, y + 4.2);
+      y += tH;
+
+      indKeys.forEach((k, i) => {
+        doc.setFillColor(...(i%2===0 ? WHITE : LIGHT));
+        doc.rect(M, y, tW, tH, 'F');
+        doc.setDrawColor(...MID);
+        doc.rect(M, y, tW, tH, 'S');
+
+        const col = cmap[indVals[i]] || cmap.neutral;
+        const status = indVals[i]==='ok'?'Normal':indVals[i]==='danger'?'High':'Elevated';
+        const interp = indVals[i]==='ok'?'Within expected range':indVals[i]==='danger'?'Significantly above threshold':'Slightly above threshold';
+
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8);
+        doc.setTextColor(...BLACK);
+        doc.text(k.replace(/_/g, ' '), M + 2, y + 4.2);
+
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(8);
+        doc.setTextColor(...col);
+        doc.text(status, M + tW*0.5, y + 4.2);
+
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8);
+        doc.setTextColor(...GRAY);
+        doc.text(interp, M + tW*0.7, y + 4.2);
+        y += tH;
+      });
+      y += 6;
+    }
+
+    thinFooter();
+
+    /* ════════════════════════════════════════════════
+       SAVE
+    ════════════════════════════════════════════════ */
+    const fname = `DPS_Report_${dShort}_${new Date().toISOString().slice(0,10)}.pdf`;
     doc.save(fname);
     showToast('✅ Report exported: ' + fname);
-  } catch(e) {
-    console.error(e);
-    showToast('⚠ PDF error — check console.');
+
+  } catch(err) {
+    console.error('PDF Export Error:', err);
+    showToast('⚠ PDF export failed. See browser console.');
   }
 }
 
