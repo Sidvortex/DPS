@@ -241,7 +241,7 @@ python manage.py runserver
 |--------|-------|
 | Ravada Siddharth | ML Integration, UI, Frontend Development, ML Model Training, Documentation |
 | Arpit Kumar | ML Model Training, Model Evaluation, Documentation |
-| Kanak Sharma | Frontend Development, Documentation, Data Preprocessing, Documentation |
+| Kanak Sharma | Frontend Development, Documentation, Data Preprocessing |
 
 ---
 
